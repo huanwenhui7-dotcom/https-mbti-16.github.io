@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MBTI 十六型人格趣味测评</title>
+  <script src="https://resource-static.cdn.bcebos.com/common/tailwindcss/3.4.16.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        container: { center: true, padding: '1.5rem', screens: { '2xl': '1280px' } },
+        extend: {
+          colors: {
+            border: 'hsl(var(--border))',
+            input: 'hsl(var(--input))',
+            ring: 'hsl(var(--ring))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+            secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+            muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+            accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+            card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' }
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 4px)',
+            sm: 'calc(var(--radius) - 8px)'
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"PingFang SC"', '"Microsoft YaHei"', '"Helvetica Neue"', 'Arial', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    /* ===== FONT-FACE:BEGIN ===== */
+    /* ===== FONT-FACE:END ===== */
+
+    /* ===== DESIGN-TOKENS:BEGIN =====
+       卡通绘本风：薄荷青底 + 奶油卡片 + 珊瑚红点缀 + 手绘描边 */
+    :root {
+      --radius: 1.25rem;
+      --background: 163 26% 56%;
+      --foreground: 26 24% 24%;
+      --card: 42 60% 95%;
+      --card-foreground: 26 24% 24%;
+      --primary: 7 80% 65%;
+      --primary-foreground: 42 60% 98%;
+      --secondary: 40 46% 88%;
+      --secondary-foreground: 26 26% 26%;
+      --muted: 163 24% 90%;
+      --muted-foreground: 163 14% 34%;
+      --accent: 46 84% 64%;
+      --accent-foreground: 26 30% 22%;
+      --border: 26 28% 26%;
+      --input: 26 28% 26%;
+      --ring: 7 80% 65%;
+      --outline: 26 30% 24%;
+      --shadow: 26 32% 22%;
+    }
+    /* ===== DESIGN-TOKENS:END ===== */
+
+    /* ===== APP-CSS:BEGIN ===== */
+    html { scroll-behavior: smooth; }
+    body {
+      min-height: 100vh;
+      background-color: hsl(var(--background));
+      background-image:
+        radial-gradient(circle at 18% 12%, hsl(163 30% 66%) 0%, transparent 42%),
+        radial-gradient(circle at 85% 88%, hsl(163 30% 50%) 0%, transparent 45%);
+      background-attachment: fixed;
+    }
+    /* 手绘贴纸卡片：粗描边 + 实心偏移阴影 */
+    .sticker {
+      border: 2.5px solid hsl(var(--outline));
+      box-shadow: 0 6px 0 0 hsl(var(--shadow));
+    }
+    .sticker-sm {
+      border: 2px solid hsl(var(--outline));
+      box-shadow: 0 4px 0 0 hsl(var(--shadow));
+    }
+    /* 弹出按钮：按下时下沉 */
+    .btn-pop {
+      border: 2.5px solid hsl(var(--outline));
+      box-shadow: 0 5px 0 0 hsl(var(--shadow));
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .btn-pop:active {
+      transform: translateY(4px);
+      box-shadow: 0 1px 0 0 hsl(var(--shadow));
+    }
+    /* 选项卡 */
+    .opt {
+      border: 2px solid hsl(var(--outline));
+      box-shadow: 0 4px 0 0 hsl(var(--shadow));
+      transition: transform .14s ease, box-shadow .14s ease, background-color .14s ease;
+    }
+    .opt:active { transform: translateY(3px); box-shadow: 0 1px 0 0 hsl(var(--shadow)); }
+    .opt-picked { background-color: hsl(var(--accent)); }
+
+    .screen { animation: pop-in .32s cubic-bezier(.34,1.56,.64,1) both; }
+    @keyframes pop-in {
+      from { opacity: 0; transform: translateY(14px) scale(.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .bar-fill { transition: width .5s cubic-bezier(.4,0,.2,1); }
+
+    /* 漂浮装饰 */
+    .float { animation: floaty 4s ease-in-out infinite; }
+    .float-slow { animation: floaty 6s ease-in-out infinite; }
+    @keyframes floaty {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(6deg); }
+    }
+    .wiggle { animation: wiggle 3.5s ease-in-out infinite; transform-origin: center; }
+    @keyframes wiggle {
+      0%,100% { transform: rotate(-4deg); }
+      50% { transform: rotate(4deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+    /* ===== APP-CSS:END ===== */
+  </style>
+</head>
+<body class="bg-background text-foreground antialiased font-sans">
+
+  <!-- 漂浮装饰层 -->
+  <div class="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
+    <svg class="float absolute left-[6%] top-[10%] h-8 w-8" viewBox="0 0 40 40"><path d="M20 2l4 12 12 4-12 4-4 12-4-12-12-4 12-4z" fill="hsl(46 84% 64%)" stroke="hsl(26 30% 24%)" stroke-width="2" stroke-linejoin="round"/></svg>
+    <svg class="float-slow absolute right-[8%] top-[16%] h-6 w-6" viewBox="0 0 40 40"><path d="M20 2l4 12 12 4-12 4-4 12-4-12-12-4 12-4z" fill="hsl(7 80% 65%)" stroke="hsl(26 30% 24%)" stroke-width="2" stroke-linejoin="round"/></svg>
+    <svg class="float absolute left-[10%] bottom-[12%] h-7 w-7" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="hsl(42 60% 95%)" stroke="hsl(26 30% 24%)" stroke-width="2"/></svg>
+    <svg class="float-slow absolute right-[10%] bottom-[20%] h-9 w-9" viewBox="0 0 48 48"><path d="M24 42s-16-10-16-22a9 9 0 0 1 16-6 9 9 0 0 1 16 6c0 12-16 22-16 22z" fill="hsl(7 80% 65%)" stroke="hsl(26 30% 24%)" stroke-width="2" stroke-linejoin="round"/></svg>
+  </div>
+
+  <main class="relative mx-auto w-full max-w-xl px-5 pb-14 pt-10">
+
+    <!-- 开始页 -->
+    <section id="screen-intro" class="screen">
+
+      <!-- 卡通吉祥物 -->
+      <div class="mx-auto mb-6 w-fit">
+        <svg class="wiggle h-32 w-32 drop-shadow-[0_6px_0_hsl(26_32%_22%)]" viewBox="0 0 160 160" role="img" aria-label="可爱吉祥物">
+          <!-- 脸 -->
+          <circle cx="80" cy="86" r="52" fill="hsl(42 60% 95%)" stroke="hsl(26 30% 24%)" stroke-width="4"/>
+          <!-- 头发 -->
+          <path d="M30 78c-6-34 22-52 50-52s56 18 50 52c-8-18-22-24-30-24 4 8 2 14 2 14s-14-8-44-8-30 8-30 8-2-6 2-14c-8 0-22 6-30 24z" fill="hsl(26 30% 24%)" stroke="hsl(26 30% 24%)" stroke-width="3" stroke-linejoin="round"/>
+          <!-- 眼镜 -->
+          <circle cx="62" cy="86" r="20" fill="hsl(0 0% 100%)" fill-opacity="0.35" stroke="hsl(26 30% 24%)" stroke-width="4"/>
+          <circle cx="100" cy="86" r="20" fill="hsl(0 0% 100%)" fill-opacity="0.35" stroke="hsl(26 30% 24%)" stroke-width="4"/>
+          <line x1="80" y1="84" x2="82" y2="84" stroke="hsl(26 30% 24%)" stroke-width="4"/>
+          <!-- 眼睛 -->
+          <circle cx="64" cy="88" r="7" fill="hsl(26 30% 24%)"/>
+          <circle cx="102" cy="88" r="7" fill="hsl(26 30% 24%)"/>
+          <circle cx="66" cy="85" r="2.4" fill="#fff"/>
+          <circle cx="104" cy="85" r="2.4" fill="#fff"/>
+          <!-- 腮红 -->
+          <ellipse cx="48" cy="104" rx="8" ry="5" fill="hsl(7 80% 65%)" fill-opacity="0.55"/>
+          <ellipse cx="112" cy="104" rx="8" ry="5" fill="hsl(7 80% 65%)" fill-opacity="0.55"/>
+          <!-- 嘴 -->
+          <path d="M74 110q6 6 12 0" fill="none" stroke="hsl(26 30% 24%)" stroke-width="3.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <div class="sticker rounded-lg bg-card p-6">
+        <p class="inline-block rounded-full border-2 border-border bg-accent px-3 py-1 text-xs font-bold text-accent-foreground">✦ 人格趣味测评 ✦</p>
+        <h1 class="mt-4 text-3xl font-extrabold leading-snug">
+          你是哪一种<br class="md:hidden" />十六型人格？
+        </h1>
+        <p class="mt-3 text-sm leading-relaxed text-secondary-foreground">
+          24 道生活化小问题，凭第一感觉选就好。约 3 分钟，测出你的四字母人格、专属昵称和四维能量分布。
+        </p>
+
+        <div class="mt-5 grid grid-cols-2 gap-3">
+          <div class="sticker-sm rounded-lg bg-secondary p-4">
+            <p class="text-3xl font-extrabold tabular-nums text-primary">24</p>
+            <p class="mt-1 text-xs font-medium text-secondary-foreground">道单选题</p>
+          </div>
+          <div class="sticker-sm rounded-lg bg-secondary p-4">
+            <p class="text-3xl font-extrabold tabular-nums text-primary">3<span class="text-lg">min</span></p>
+            <p class="mt-1 text-xs font-medium text-secondary-foreground">轻松完成</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="sticker mt-5 rounded-lg bg-card p-5">
+        <p class="text-sm font-bold">四个维度看什么</p>
+        <ul class="mt-3 space-y-2.5 text-sm font-medium">
+          <li class="flex items-center justify-between"><span>🔋 外向 E / 内向 I</span><span class="text-muted-foreground">能量从哪来</span></li>
+          <li class="flex items-center justify-between"><span>🔭 实感 S / 直觉 N</span><span class="text-muted-foreground">信息怎么收</span></li>
+          <li class="flex items-center justify-between"><span>⚖️ 思考 T / 情感 F</span><span class="text-muted-foreground">决定靠什么</span></li>
+          <li class="flex items-center justify-between"><span>🗓️ 判断 J / 知觉 P</span><span class="text-muted-foreground">生活怎么排</span></li>
+        </ul>
+      </div>
+
+      <button id="btn-start" type="button"
+        class="btn-pop mt-7 w-full rounded-lg bg-primary px-6 py-4 text-lg font-extrabold text-primary-foreground">
+        开始测评 →
+      </button>
+      <p class="mt-5 text-center text-xs leading-relaxed text-card">
+        结果仅供自我探索与娱乐参考，不作为心理诊断或招聘依据。
+      </p>
+    </section>
+
+    <!-- 答题页 -->
+    <section id="screen-quiz" class="screen hidden">
+      <div class="flex items-center justify-between">
+        <button id="btn-back" type="button" class="sticker-sm rounded-full bg-card px-4 py-1.5 text-xs font-bold active:translate-y-0.5">← 上一题</button>
+        <span class="sticker-sm rounded-full bg-accent px-4 py-1.5 text-xs font-extrabold tabular-nums text-accent-foreground">第 <span id="q-index">1</span> / 24 题</span>
+      </div>
+
+      <div class="mt-4 h-4 w-full overflow-hidden rounded-full border-2 border-border bg-card">
+        <div id="progress" class="bar-fill h-full rounded-full bg-primary" style="width:4.2%"></div>
+      </div>
+
+      <div class="sticker mt-7 rounded-lg bg-card p-6">
+        <div class="flex items-start gap-3">
+          <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-border bg-primary text-base font-extrabold text-primary-foreground"><span id="q-num">1</span></span>
+          <h2 id="q-text" class="mt-1.5 text-xl font-extrabold leading-snug">题目</h2>
+        </div>
+      </div>
+
+      <div id="options" class="mt-5 space-y-3"></div>
+
+      <p class="mt-6 text-center text-xs font-medium text-card">凭第一感觉选，没有标准答案 🌿</p>
+    </section>
+
+    <!-- 结果页 -->
+    <section id="screen-result" class="screen hidden">
+      <div class="sticker rounded-lg bg-card p-6 text-center">
+        <div id="group-badge" class="mx-auto w-fit"></div>
+        <h1 id="type-code" class="mt-4 text-5xl font-black tracking-wide">INFP</h1>
+        <p id="type-name" class="mt-1 text-xl font-extrabold text-primary">调停者</p>
+        <p id="type-motto" class="mt-3 text-sm font-medium leading-relaxed text-secondary-foreground"></p>
+      </div>
+
+      <div class="sticker mt-5 rounded-lg bg-card p-5">
+        <h2 class="text-base font-extrabold">📊 你的四维能量分布</h2>
+        <p class="mt-1 text-xs leading-relaxed text-muted-foreground">越接近 100% 越典型；接近 50% 则是灵活的两栖型。</p>
+        <div id="dims" class="mt-4 space-y-4"></div>
+      </div>
+
+      <div id="boundary-note" class="sticker-sm mt-5 hidden rounded-lg bg-accent p-4 text-sm font-medium leading-relaxed text-accent-foreground"></div>
+
+      <div class="mt-5 space-y-3">
+        <div class="sticker-sm rounded-lg bg-card p-5">
+          <p class="text-xs font-extrabold text-primary">💪 性格优势</p>
+          <p id="d-adv" class="mt-2 text-sm leading-relaxed"></p>
+        </div>
+        <div class="sticker-sm rounded-lg bg-card p-5">
+          <p class="text-xs font-extrabold text-primary">💬 社交模式</p>
+          <p id="d-social" class="mt-2 text-sm leading-relaxed"></p>
+        </div>
+        <div class="sticker-sm rounded-lg bg-card p-5">
+          <p class="text-xs font-extrabold text-primary">🛠️ 做事风格</p>
+          <p id="d-work" class="mt-2 text-sm leading-relaxed"></p>
+        </div>
+        <div class="sticker-sm rounded-lg bg-card p-5">
+          <p class="text-xs font-extrabold text-primary">🧭 适合方向</p>
+          <p id="d-career" class="mt-2 text-sm leading-relaxed"></p>
+        </div>
+        <div class="sticker-sm rounded-lg bg-accent p-5">
+          <p class="text-xs font-extrabold text-accent-foreground">💌 给你的一句话</p>
+          <p id="d-tip" class="mt-2 text-sm font-medium leading-relaxed text-accent-foreground"></p>
+        </div>
+      </div>
+
+      <div class="mt-7 flex gap-3">
+        <button id="btn-copy" type="button"
+          class="btn-pop flex-1 rounded-lg bg-card px-4 py-3.5 text-sm font-extrabold">复制结果</button>
+        <button id="btn-restart" type="button"
+          class="btn-pop flex-1 rounded-lg bg-primary px-4 py-3.5 text-sm font-extrabold text-primary-foreground">重新测试</button>
+      </div>
+
+      <p class="mt-5 text-center text-xs leading-relaxed text-card">
+        本测评结果仅供娱乐参考，不作为心理诊断或招聘依据。
+      </p>
+    </section>
+
+  </main>
+
+  <!-- ===== APP-JS:BEGIN ===== -->
+  <script>
+    const QS = [
+      { q: '周末最想怎么过？', o: [['约一群朋友玩', 'ENFP'], ['和好友聊新鲜的', 'ENTJ'], ['宅家追剧打游戏', 'ISFP'], ['按清单逐项打卡', 'ISTJ']] },
+      { q: '接到新任务，先做什么？', o: [['拉人头脑风暴', 'ENFP'], ['先摸清目标和方案', 'ENTJ'], ['参考现成做法', 'ISTJ'], ['先看细节和案例', 'ISFJ']] },
+      { q: '朋友来倾诉，你会？', o: [['先共情安慰', 'ENFP'], ['帮他分析给建议', 'ENTJ'], ['默默陪在旁边', 'ISFJ'], ['客观理清利弊', 'ISTP']] },
+      { q: '拿到说明书，你？', o: [['扫一眼就上手', 'ESTP'], ['严格按步骤来', 'ISTJ'], ['琢磨它为什么这样设计', 'INTP'], ['按手感随手调', 'ENFP']] },
+      { q: '讨论卡住时，你？', o: [['推动大家拍板', 'ENTJ'], ['抛新点子破局', 'ENFP'], ['先缓和气氛', 'ESFJ'], ['冷静分析症结', 'ISTP']] },
+      { q: '你喜欢哪种工作状态？', o: [['快节奏、多变', 'ESTP'], ['有计划、按部就班', 'ISTJ'], ['自由、按自己节奏', 'INFP'], ['定目标、带队冲', 'ENTJ']] },
+      { q: '买衣服最看重？', o: [['上身效果', 'ESFP'], ['款式够新颖', 'ENFP'], ['材质价格实用', 'ISTJ'], ['合自己审美', 'INFP']] },
+      { q: '学新技能，你？', o: [['直接上手试错', 'ESTP'], ['先列学习计划', 'ISTJ'], ['先搞懂原理', 'INTP'], ['找人一起学', 'ENFJ']] },
+      { q: '重要决定，你更信？', o: [['数据和逻辑', 'INTJ'], ['内心感受和价值', 'INFP'], ['经验和现实条件', 'ISTJ'], ['听听身边人意见', 'ESFJ']] },
+      { q: '你的桌面通常？', o: [['分类收纳各归位', 'ISTJ'], ['随性堆但找得到', 'ESTP'], ['摆满小物乱中有序', 'INFP'], ['定期大扫除', 'ENTJ']] },
+      { q: '看完电影想聊？', o: [['剧情和表演', 'ESFJ'], ['隐喻和主题', 'INFP'], ['逻辑有没有漏洞', 'INTP'], ['它反映的社会现象', 'ENTJ']] },
+      { q: '你怎么看规则？', o: [['照规矩来最稳', 'ISTJ'], ['特殊时可变通', 'ESTP'], ['不合理就想改进', 'INTP'], ['别让规则伤人', 'ESFJ']] },
+      { q: '假期出行，你爱？', o: [['攻略定到几点吃啥', 'ISTJ'], ['说走就走', 'ESTP'], ['去没去过的地方', 'ENFP'], ['找安静地慢下来', 'INFP']] },
+      { q: '朋友临时约，但你已有安排？', o: [['改期陪朋友', 'ESFP'], ['能协调就协调', 'ESTP'], ['按原计划守约', 'ISTJ'], ['看心情，独处也香', 'INFP']] },
+      { q: '你更认同哪句？', o: [['三思而后行', 'ISTJ'], ['先干了再说', 'ESTP'], ['理解最温暖', 'ENFJ'], ['保持好奇', 'INTP']] },
+      { q: '遇到冲突，你？', o: [['摊开谈、解决掉', 'ENTJ'], ['先缓和气氛', 'ESFJ'], ['就事论事讲对错', 'ISTP'], ['各自冷静顾感受', 'INFP']] },
+      { q: '你想当团队里的？', o: [['拍板的领导者', 'ENTJ'], ['出点子的创意王', 'ENFP'], ['稳落地的执行者', 'ISTJ'], ['温暖的协调者', 'ESFJ']] },
+      { q: '遇到复杂难题，你？', o: [['拆模块求最优解', 'INTJ'], ['动手拆开研究', 'ISTP'], ['找资料找经验', 'ISTJ'], ['拉大家集思广益', 'ENFJ']] },
+      { q: '最爱的放松方式？', o: [['看比赛看演出', 'ESFP'], ['研究冷门领域', 'INTP'], ['聚会唱 K 嗨玩', 'ESFP'], ['独处读书放空', 'INFP']] },
+      { q: '做选择，你最怕？', o: [['逻辑站不住脚', 'INTJ'], ['伤了别人感情', 'ESFJ'], ['浪费时间精力', 'ISTP'], ['错过有趣可能', 'ENFP']] },
+      { q: '你怎么看「计划」？', o: [['没计划会焦虑', 'ISTJ'], ['来了变化就应变', 'ESTP'], ['大方向有、细节留白', 'INFP'], ['用来带队达成', 'ENTJ']] },
+      { q: '学新知识，你爱？', o: [['看案例和实例', 'ISTJ'], ['抓框架看全貌', 'ENTJ'], ['动手做一遍', 'ESTP'], ['联想串联已知', 'INFP']] },
+      { q: '别人最可能夸你？', o: [['靠谱、说到做到', 'ISTJ'], ['有趣、自带欢乐', 'ESFP'], ['有想法、爱钻研', 'INTP'], ['热情、会照顾人', 'ESFJ']] },
+      { q: '人生是场游戏，你想当？', o: [['掌控全局的策略家', 'INTJ'], ['享受过程的探险家', 'ESFP'], ['练到极致的工匠', 'ISTP'], ['凝聚众人的领队', 'ENFJ']] }
+    ];
+
+    const TYPES = {
+      INTJ: { name: '建筑师', g: 'NT', motto: '运筹帷幄的战略家，眼里永远有全局蓝图。',
+        adv: '战略思维强、独立果断、目标感强、追求高效。', social: '朋友不多但都很深，更重思想交流。',
+        work: '先定长远框架再动手，独当一面，反感低效内耗。', career: '战略规划、科研、架构设计、管理咨询。',
+        tip: '允许事情先完成、再完美，紧绷的弦也需要松一松。' },
+      INTP: { name: '逻辑学家', g: 'NT', motto: '永远在追问「为什么」的脑洞哲学家。',
+        adv: '逻辑缜密、好奇心强、善于深度钻研、思维灵活。', social: '被动型社交，爱跟同好聊思想，懒得应酬。',
+        work: '追求自主与自由实验，喜欢拆解本质，讨厌僵化流程。', career: '计算机、理论研究、数据分析、发明创造。',
+        tip: '别让「再想想」拖住脚步，先做出一个最小版本吧。' },
+      ENTJ: { name: '指挥官', g: 'NT', motto: '天生的领队，天生就要带队拿结果。',
+        adv: '领导力强、果断高效、有魅力、执行力爆表。', social: '主动出击，善于召集众人朝共同目标努力。',
+        work: '目标导向，看能力不唯人情，擅长布局长远战略。', career: '企业管理、领导岗位、法律、金融。',
+        tip: '权威之外再加一点温度，团队会走得更远。' },
+      ENTP: { name: '辩论家', g: 'NT', motto: '点子层出不穷、爱抬杠的脑洞发明家。',
+        adv: '反应快、善辩论、爱挑战常规、创意丰富。', social: '活跃爱碰撞，享受思想交锋，话题永远不停。',
+        work: '喜新求变、启动快，但容易三分钟热度。', career: '创业、创新、传媒、咨询、产品策划。',
+        tip: '给热情加个「收尾」技能，把点子真正落地。' },
+      INFJ: { name: '提倡者', g: 'NF', motto: '外表安静、内心滚烫的意义追寻者。',
+        adv: '洞察力强、坚守价值观、专注有远见、外冷内热。', social: '社交少而重深度，渴望被真正理解。',
+        work: '专注理想，追求有意义的工作，执行力稳定。', career: '心理咨询、教育、写作、公益。',
+        tip: '别把别人的情绪都扛在自己身上，先照顾好自己。' },
+      INFP: { name: '调停者', g: 'NF', motto: '活在理想与热爱里的温柔造梦师。',
+        adv: '同理心强、理想主义、珍视内在和谐、富有创造力。', social: '温和善倾听，圈子小但真诚，是很好的情感陪伴者。',
+        work: '灵活随性，为认同的事全力以赴，易因理想受挫。', career: '创作艺术、教育、咨询、心理治疗。',
+        tip: '理想很贵，记得给计划表也留个位置。' },
+      ENFJ: { name: '主人公', g: 'NF', motto: '天生会鼓舞人心的灵魂领队。',
+        adv: '善激励、有感染力、有组织力、关注他人成长。', social: '热情主动、人缘极佳，乐于凝聚和带领团队。',
+        work: '有组织，以价值与情感驱动，重视团队氛围。', career: '教育、培训、领导、咨询、公关。',
+        tip: '照亮别人的同时，别忘了给自己留盏灯。' },
+      ENFP: { name: '竞选者', g: 'NF', motto: '自由奔放、眼里有光的社交小太阳。',
+        adv: '热情洋溢、点子丰富、重深层连接、魅力四射。', social: '社交焦点，爱结识新朋友，追求有意义的情感连接。',
+        work: '有创意、追求自由与意义，兴趣广但易分散。', career: '创意、传媒、销售、社交、创业。',
+        tip: '热情满分，记得也给「专注」充充电。' },
+      ISTJ: { name: '物流师', g: 'SJ', motto: '说到做到的靠谱执行担当。',
+        adv: '务实严谨、责任感强、注重细节、可靠高效。', social: '稳重重承诺，朋友不多但长久。',
+        work: '按流程执行，精确可靠，略带保守但极稳。', career: '会计、审计、行政管理、工程、质检。',
+        tip: '偶尔跳出流程试个新玩法，惊喜会更多。' },
+      ISFJ: { name: '守卫者', g: 'SJ', motto: '默默照顾所有人的温柔守护者。',
+        adv: '温和忠诚、富有同情心、耐心细致、值得信赖。', social: '友善体贴，乐于照顾他人，重视和谐关系。',
+        work: '尽责务实、维护传统，稳稳按时完成。', career: '护士、教师、社工、行政、客服。',
+        tip: '照顾别人之余，也别忘了对自己好一点。' },
+      ESTJ: { name: '总经理', g: 'SJ', motto: '高效务实、说干就干的秩序管理者。',
+        adv: '高效负责、重规则与结果、组织力强、脚踏实地。', social: '主动爱协调，乐于组织和带队。',
+        work: '重效率与能力，目标明确、执行力强。', career: '管理、教育、金融、工程、行政主管。',
+        tip: '规则之外，偶尔给意外留一点空间会更从容。' },
+      ESFJ: { name: '执政官', g: 'SJ', motto: '人见人爱的暖心气氛组组长。',
+        adv: '友好热情、善体察情绪、责任感强、维护和谐。', social: '人缘极佳，乐于助人，是关系经营高手。',
+        work: '以具体实际的方式助人，注重团队和睦。', career: '服务业、广告、公关、医护、人事。',
+        tip: '别太在意别人的评价，你本来就很棒。' },
+      ISTP: { name: '鉴赏家', g: 'SP', motto: '冷静理性的动手派问题解决专家。',
+        adv: '动手能力强、临场应变、灵活冷静、爱钻研技术。', social: '低调独立，话不多但靠谱。',
+        work: '注重实效、随性灵活，喜欢拆解和研究事物。', career: '技术、工程、机械、维修、设计。',
+        tip: '多说说你的想法，别人才会更懂你的厉害。' },
+      ISFP: { name: '探险家', g: 'SP', motto: '安静自在、忠于内心的文艺艺术家。',
+        adv: '温和敏感、享受当下、忠诚负责、审美在线。', social: '温和和善，重个人空间，不爱争论冲突。',
+        work: '按自己节奏来，忠于价值观，随性而真诚。', career: '手工艺、艺术、医护、设计、服务。',
+        tip: '你的感受很重要，记得勇敢表达出来。' },
+      ESTP: { name: '企业家', g: 'SP', motto: '说干就干、敢闯敢拼的行动派玩家。',
+        adv: '精力充沛、适应力强、勇于冒险、擅长救场。', social: '大胆有魅力，享受现场与即时反馈。',
+        work: '行动派、重结果，随机应变、说走就走。', career: '销售、急救、创业、运动、业务。',
+        tip: '冲劲十足，偶尔也抬头看看长远。' },
+      ESFP: { name: '表演者', g: 'SP', motto: '自带聚光灯、把欢乐带给大家的气氛担当。',
+        adv: '热情开朗、爱社交、带来欢乐、接受力强。', social: '天生的焦点，爱取悦他人，人见人爱。',
+        work: '随性、活在当下，享受过程，需要一点自律。', career: '演艺、旅游、销售、娱乐、活动策划。',
+        tip: '欢乐满分，也给「坚持到底」加个 buff。' }
+    };
+
+    const GROUP_NAME = { NT: '分析家 · 理性者', NF: '外交家 · 理想主义者', SJ: '守护者 · 传统主义者', SP: '探索者 · 经验主义者' };
+    const GROUP_COLOR = { NT: '#7C5CE0', NF: '#2FA36B', SJ: '#3B7BD6', SP: '#D99A16' };
+
+    const DIMS = [
+      { a: 'E', b: 'I', an: '外向', bn: '内向', hint: '能量从哪来' },
+      { a: 'S', b: 'N', an: '实感', bn: '直觉', hint: '信息怎么收' },
+      { a: 'T', b: 'F', an: '思考', bn: '情感', hint: '决定靠什么' },
+      { a: 'J', b: 'P', an: '判断', bn: '知觉', hint: '生活怎么排' }
+    ];
+
+    const el = id => document.getElementById(id);
+    let current = 0;
+    let answers = new Array(QS.length).fill(null);
+
+    function show(id) {
+      ['screen-intro', 'screen-quiz', 'screen-result'].forEach(s => el(s).classList.add('hidden'));
+      const t = el(id);
+      t.classList.remove('hidden');
+      t.style.animation = 'none';
+      void t.offsetWidth;
+      t.style.animation = '';
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+
+    function renderQuestion() {
+      const item = QS[current];
+      el('q-index').textContent = current + 1;
+      el('q-num').textContent = current + 1;
+      el('q-text').textContent = item.q;
+      el('progress').style.width = ((current + 1) / QS.length * 100).toFixed(1) + '%';
+      el('btn-back').style.visibility = current === 0 ? 'hidden' : 'visible';
+
+      const box = el('options');
+      box.innerHTML = '';
+      item.o.forEach((opt, i) => {
+        const picked = answers[current] === i;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'opt flex w-full items-center gap-3 rounded-lg px-4 py-3.5 text-left text-sm font-bold ' +
+          (picked ? 'opt-picked text-accent-foreground' : 'bg-card text-secondary-foreground');
+        btn.innerHTML = '<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-border text-sm font-extrabold ' +
+          (picked ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground') + '">' +
+          String.fromCharCode(65 + i) + '</span><span>' + opt[0] + '</span>';
+        btn.addEventListener('click', () => pick(i));
+        box.appendChild(btn);
+      });
+    }
+
+    function pick(i) {
+      answers[current] = i;
+      renderQuestion();
+      setTimeout(() => {
+        if (current < QS.length - 1) {
+          current += 1;
+          renderQuestion();
+        } else {
+          calculate();
+        }
+      }, 170);
+    }
+
+    function calculate() {
+      const s = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+      answers.forEach((ai, qi) => {
+        const letters = QS[qi].o[ai][1];
+        letters.split('').forEach(L => { s[L] += 2; });
+      });
+
+      const dims = DIMS.map(d => {
+        const pctA = s[d.a] / (s[d.a] + s[d.b]) * 100;
+        return { ...d, pctA, pctB: 100 - pctA, win: pctA >= 50 ? d.a : d.b };
+      });
+      const code = dims.map(d => d.win).join('');
+      renderResult(code, dims, s);
+    }
+
+    function renderResult(code, dims, s) {
+      const t = TYPES[code];
+      const color = GROUP_COLOR[t.g];
+      el('group-badge').innerHTML =
+        '<svg viewBox="0 0 170 34" class="h-8 w-auto" role="img" aria-label="' + GROUP_NAME[t.g] + '">' +
+        '<rect x="1" y="1" width="168" height="32" rx="16" fill="' + color + '" stroke="hsl(26 30% 24%)" stroke-width="2.5"/>' +
+        '<text x="85" y="22" text-anchor="middle" font-size="14" font-weight="bold" fill="#ffffff" font-family="inherit">' +
+        GROUP_NAME[t.g] + '</text></svg>';
+      el('type-code').textContent = code;
+      el('type-name').textContent = t.name;
+      el('type-motto').textContent = t.motto;
+      el('d-adv').textContent = t.adv;
+      el('d-social').textContent = t.social;
+      el('d-work').textContent = t.work;
+      el('d-career').textContent = t.career;
+      el('d-tip').textContent = t.tip;
+
+      const box = el('dims');
+      box.innerHTML = '';
+      const boundaries = [];
+      dims.forEach(d => {
+        const aWin = d.pctA >= d.pctB;
+        const diff = Math.abs(d.pctA - d.pctB);
+        if (diff < 10) boundaries.push(d.an + '/' + d.bn);
+        const row = document.createElement('div');
+        row.innerHTML =
+          '<div class="flex items-baseline justify-between text-xs font-bold">' +
+            '<span class="' + (aWin ? 'text-foreground' : 'text-muted-foreground') + '">' + d.an + ' ' + d.a + ' · ' + d.pctA.toFixed(1) + '%</span>' +
+            '<span class="' + (aWin ? 'text-muted-foreground' : 'text-foreground') + '">' + d.bn + ' ' + d.b + ' · ' + d.pctB.toFixed(1) + '%</span>' +
+          '</div>' +
+          '<div class="mt-2 h-4 w-full overflow-hidden rounded-full border-2 border-border bg-secondary">' +
+            '<div class="bar-fill h-full rounded-full bg-primary" style="width:' + d.pctA.toFixed(1) + '%"></div>' +
+          '</div>' +
+          '<p class="mt-1 text-xs text-muted-foreground">' + d.hint + '</p>';
+        box.appendChild(row);
+      });
+
+      const note = el('boundary-note');
+      if (boundaries.length) {
+        note.classList.remove('hidden');
+        note.textContent = '🌈 你在「' + boundaries.join('」「') + '」维度上两端非常接近，是难得的两栖型——不同情境下你都能切换，不必被单一标签框住。';
+      } else {
+        note.classList.add('hidden');
+      }
+
+      window.__lastResult = {
+        code, name: t.name,
+        dims: dims.map(d => ({ left: d.an + ' ' + d.a + ' ' + d.pctA.toFixed(1) + '%', right: d.bn + ' ' + d.b + ' ' + d.pctB.toFixed(1) + '%' }))
+      };
+
+      show('screen-result');
+    }
+
+    el('btn-start').addEventListener('click', () => {
+      current = 0;
+      answers = new Array(QS.length).fill(null);
+      show('screen-quiz');
+      renderQuestion();
+    });
+
+    el('btn-back').addEventListener('click', () => {
+      if (current > 0) { current -= 1; renderQuestion(); }
+    });
+
+    el('btn-restart').addEventListener('click', () => {
+      current = 0;
+      answers = new Array(QS.length).fill(null);
+      show('screen-quiz');
+      renderQuestion();
+    });
+
+    el('btn-copy').addEventListener('click', async () => {
+      const r = window.__lastResult;
+      if (!r) return;
+      const text = '我的 MBTI 是 ' + r.code + '（' + r.name + '）\n' +
+        r.dims.map(d => d.left + ' ←→ ' + d.right).join('\n') +
+        '\n来自「MBTI 十六型人格趣味测评」';
+      const btn = el('btn-copy');
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = '已复制 ✓';
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btn.textContent = '已复制 ✓';
+      }
+      setTimeout(() => { btn.textContent = '复制结果'; }, 1600);
+    });
+  </script>
+  <!-- ===== APP-JS:END ===== -->
+</body>
+</html>
